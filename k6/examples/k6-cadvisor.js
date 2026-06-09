@@ -28,6 +28,8 @@ export default function () {
     kubernetes.apply(cadvisorServiceManifestRaw);
 
     console.log('cadvisor.yaml applied successfully.');
+
+    sleep(60); // Wait for resources to be created and become ready
 }
 
 
