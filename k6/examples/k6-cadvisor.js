@@ -1,4 +1,5 @@
 import { Kubernetes } from 'k6/x/kubernetes';
+import { sleep } from 'k6';
 
 
 const cadvisorNamespaceYaml = '../../app/cadvisor/00-cadvisor-namespace.yaml';
