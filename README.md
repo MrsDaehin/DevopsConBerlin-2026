@@ -1,23 +1,295 @@
-# DevopsConBerlin-2026
+# Chaos Engineering as Code with k6 and Chaos Mesh
 
+> "Treat Failure as a Feature. Hope is not an strategy"
 
-Because we will want to be able to easily examine resource utilization in the course of this article, we are also going to install Google’s cadvisor to provide some simple resource monitoring, utilizing this Kubernetes YAML8 manifest, which will create the cadvisor Namespace, ServiceAccount, and DaemonSet. We can achieve this by copying the manifest below into a file called cadvisor.yaml and then running kubectl apply -f ./cadvisor.yaml.
+Welcome to the companion repository for the DevOpsCon Berlin 2026 session.
 
-https://github.com/google/cadvisor
+Modern cloud-native systems are expected to survive failures. Pods crash. Nodes disappear. Networks become unreliable. Dependencies slow down.
 
-You can verify that the cadvisor DaemonSet is in a good state by running kubectl get daemonset -n cadvisor, and ensuring that there is one pod per worker, which is both READY and AVAILABLE. Once everything is running, you can access the cadvisor dashboard on one of the nodes by opening up a new terminal and running:
+Yet most teams still validate their systems only under normal operating conditions.
 
-$ kubectl port-forward -n cadvisor pods/$(kubectl get pods -o jsonpath="{.items[0].metadata.name}" -n cadvisor) 8080
+In this session, we explore a different approach:
 
-Forwarding from 127.0.0.1:8080 -> 8080
-Forwarding from [::1]:8080 -> 8080
+**What if resilience testing became part of your automated testing strategy?**
 
-Then, open up a web browser and point it to http://127.0.0.1:8080/containers/.
+Instead of treating Chaos Engineering as a separate activity, we will use:
 
-Chaos Mesh has three primary concepts that form the core of the tool and its capabilities. These include:
+- k6 to generate traffic and validate user experience
+- xk6-kubernetes to interact with Kubernetes
+- Chaos Mesh to inject failures
+- SLOs and thresholds to verify resilience
 
-Experiments (local UI) - which are used to define the parameters of a single chaos test that the user wants to run. This will include the type of chaos to inject into the system and specifically how that chaos will be shaped and what it will target.
-Workflows (local UI) - this allows you to define a complex series of tests that should run in an environment to more closely simulate complex real-world outages.
-Schedules (local UI) - expands upon Experiments by making them run on a defined schedule.
+The result is a fully automated experiment where load generation, fault injection, and validation happen from the same test suite.
 
-https://superorbital.io/blog/chaos-mesh/
+---
+
+## The Story
+
+Imagine a typical production service. Everything looks healthy:
+
+- Dashboards are green
+- Deployments are successful
+- Response times are acceptable
+
+But there is one important question nobody has answered:
+
+> What happens when something goes wrong?
+
+Will users notice? Will the application recover? Will our SLOs still be respected?
+
+The only way to know is to test failure intentionally. That is where Chaos Engineering begins.
+
+---
+
+## From Load Testing to Resilience Testing
+
+Traditional performance testing asks:
+
+> How fast is the system?
+
+Chaos Engineering asks:
+
+> How does the system behave when things break?
+
+In this workshop we combine both perspectives. We will:
+
+1. Generate load with k6
+2. Establish a steady state
+3. Inject failures with Chaos Mesh
+4. Observe the impact
+5. Validate resilience using automated assertions
+
+This transforms a performance test into a resilience test.
+
+---
+
+## Architecture
+
+The demo environment consists of:
+
+- Kubernetes cluster (Kind)
+- Demo application
+- Chaos Mesh
+- Prometheus
+- Grafana
+- k6 with xk6-kubernetes
+
+```text
+                   +----------------+
+                   |       k6       |
+                   | Load + Chaos   |
+                   +--------+-------+
+                            |
+                            |
+                            v
+--------------------------------------------------
+|                 Kubernetes Cluster               |
+|                                                  |
+|  +-----------+      +-----------+                |
+|  | Service A | ---> | Service B |                |
+|  +-----------+      +-----------+                |
+|                                                  |
+|         Chaos Mesh injects failures              |
+--------------------------------------------------
+```
+
+---
+
+## Chaos as Code
+
+A key idea of this session is that chaos experiments should be versioned and reproducible. Instead of clicking buttons in a UI, experiments are defined as code.
+
+Example:
+
+```yaml
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-delay
+spec:
+  action: delay
+```
+
+These manifests live in source control and can be executed repeatedly across environments.
+
+---
+
+## Repository Structure
+
+```text
+.
+├── app/
+├── chaos/
+├── k6/
+├── monitoring/
+├── kind/
+├── scripts/
+└── docs/
+```
+
+### `app/`
+Demo application deployed to Kubernetes.
+
+### `chaos/`
+Chaos Mesh experiments. Examples include Network Delay, Pod Kill, Pod Failure, CPU Stress, and Chaos Workflows.
+
+### `k6/`
+Performance and resilience tests. Each test follows a simple pattern:
+
+```javascript
+load()
+disrupt()
+validate()
+```
+
+The load scenario generates traffic. The disrupt scenario injects failures. Thresholds and checks validate the outcome.
+
+---
+
+## Experiments
+
+### Experiment 1: Network Latency
+
+**Question**
+
+Can our service tolerate additional latency?
+
+**Chaos**
+
+- Inject network delay
+
+**Validation**
+
+- Response time remains below SLO
+
+---
+
+### Experiment 2: Pod Failure
+
+**Question**
+
+Can Kubernetes recover automatically?
+
+**Chaos**
+
+- Inject pod failures
+
+**Validation**
+
+- Error rate remains acceptable
+
+---
+
+### Experiment 3: CPU Stress
+
+**Question**
+
+How does the application behave under resource pressure?
+
+**Chaos**
+
+- Saturate CPU resources
+
+**Validation**
+
+- User experience remains acceptable
+
+---
+
+### Experiment 4: Chaos Workflow
+
+**Question**
+
+What happens when multiple failures occur together?
+
+**Chaos**
+
+- Network delay
+- Pod failure
+- Resource stress
+
+**Validation**
+
+- System continues to satisfy resilience objectives
+
+---
+
+## Running the Workshop
+
+### Create Cluster
+
+```bash
+./scripts/create-cluster.sh
+```
+
+### Install Chaos Mesh
+
+```bash
+./scripts/install-chaos-mesh.sh
+```
+
+### Deploy Demo Application
+
+```bash
+./scripts/deploy-demo.sh
+```
+
+### Run Baseline Test
+
+```bash
+k6 run k6/basic-load.js
+```
+
+### Run Chaos Experiment
+
+```bash
+k6 run k6/network-chaos.js
+```
+
+---
+
+## Success Criteria
+
+The goal is not to avoid failure. The goal is to understand failure.
+
+A successful experiment is one that teaches us something about our system. Whether the experiment passes or fails, we learn. And every lesson makes the system more resilient.
+
+---
+
+## Key Takeaways
+
+By the end of this session you will know how to:
+
+- Use Chaos Mesh on Kubernetes
+- Drive experiments from k6
+- Automate Chaos Engineering workflows
+- Validate resilience using SLOs
+- Treat chaos experiments as code
+- Integrate resilience testing into your delivery pipelines
+
+---
+
+## About the Speaker
+
+**Almudena "Almu" Vivanco**
+
+Principal Performance Engineer, Chaos Engineering advocate, and international speaker focused on performance, observability, resilience, and cloud-native platforms.
+
+With more than 20 years of experience building and testing large-scale distributed systems, Almu helps organizations move beyond traditional testing and adopt resilience engineering practices that prepare systems for real-world failures.
+
+---
+
+## Resources
+
+- Chaos Mesh: https://chaos-mesh.org
+- Chaos Mesh Playground: https://github.com/superorbital/chaos-mesh-playground
+- k6: https://k6.io
+- xk6-kubernetes: https://github.com/grafana/xk6-kubernetes
+
+---
+
+## Remember
+
+A green dashboard does not prove resilience. A successful chaos experiment does.
+
+Happy breaking things! 🚀

@@ -21,8 +21,6 @@ export default function () {
 
     console.log(`Applying cadvisor manifest from ${cadvisorServiceYaml}`);
     
-    
-    // Pass raw YAML string to kubernetes.apply() to handle multi-document files
     kubernetes.apply(cadvisorNamespaceManifestRaw);
     kubernetes.apply(cadvisorServiceAccountManifestRaw);
     kubernetes.apply(cadvisorDaemonSetManifestRaw);
@@ -30,7 +28,7 @@ export default function () {
 
     console.log('cadvisor.yaml applied successfully.');
 
-    sleep(60); // Wait for resources to be created and become ready
+    sleep(10); 
 }
 
 
@@ -40,8 +38,9 @@ export function teardown () {
     
     console.log('Cleaning up cadvisor resources...');
     
-    kubernetes.delete(cadvisorNamespaceManifestRaw);
-    kubernetes.delete(cadvisorServiceAccountManifestRaw);
-    kubernetes.delete(cadvisorDaemonSetManifestRaw);
-    kubernetes.delete(cadvisorServiceManifestRaw);
+    kubernetes.delete(
+        `apiVersion: 'v1',
+        kind: 'Namespace',
+        metadata: 
+            name: 'cadvisor'`);
 }
