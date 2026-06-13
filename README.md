@@ -67,8 +67,8 @@ This transforms a performance test into a resilience test.
 
 The demo environment consists of:
 
-- Kubernetes cluster (Kind)
-- Demo application
+- Kubernetes cluster (Minikube)
+- Sample Kubernetes applications
 - Chaos Mesh
 - Prometheus
 - Grafana
@@ -118,31 +118,32 @@ These manifests live in source control and can be executed repeatedly across env
 
 ```text
 .
-├── app/
-├── chaos/
+├── docs/
+├── experiments/
 ├── k6/
-├── monitoring/
-├── kind/
+├── kubernetes-sample-apps/
+├── minikube/
 ├── scripts/
-└── docs/
+└── README.md
 ```
 
-### `app/`
-Demo application deployed to Kubernetes.
+### `docs/`
+Workshop documentation, architecture notes, and the chaos hypothesis.
 
-### `chaos/`
-Chaos Mesh experiments. Examples include Network Delay, Pod Kill, Pod Failure, CPU Stress, and Chaos Workflows.
+### `experiments/`
+Chaos Engineering experiments and supporting artifacts for resilience testing.
 
 ### `k6/`
-Performance and resilience tests. Each test follows a simple pattern:
+Performance and resilience test scripts, including load, resource stress, and pod disruption scenarios.
 
-```javascript
-load()
-disrupt()
-validate()
-```
+### `kubernetes-sample-apps/`
+Sample Kubernetes applications and manifests for demo deployments.
 
-The load scenario generates traffic. The disrupt scenario injects failures. Thresholds and checks validate the outcome.
+### `minikube/`
+Local Minikube cluster setup and teardown scripts.
+
+### `scripts/`
+Helper scripts for installing Chaos Mesh, configuring Helm, and working with k6.
 
 ---
 
@@ -219,19 +220,20 @@ What happens when multiple failures occur together?
 ### Create Cluster
 
 ```bash
-./scripts/create-cluster.sh
+./minikube/00-create_cluster.sh
 ```
 
 ### Install Chaos Mesh
 
 ```bash
-./scripts/install-chaos-mesh.sh
+./scripts/03_add_helm_repo.sh
+./scripts/04_helm_install_chaos_mesh.sh
 ```
 
 ### Deploy Demo Application
 
 ```bash
-./scripts/deploy-demo.sh
+kubectl apply -k kubernetes-sample-apps/bookinfo/kustomize
 ```
 
 ### Run Baseline Test
@@ -243,7 +245,7 @@ k6 run k6/basic-load.js
 ### Run Chaos Experiment
 
 ```bash
-k6 run k6/network-chaos.js
+k6 run k6/pod-kill.js
 ```
 
 ---
