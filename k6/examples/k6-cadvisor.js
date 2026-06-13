@@ -2,17 +2,17 @@ import { Kubernetes } from 'k6/x/kubernetes';
 import { sleep } from 'k6';
 
 
-const cadvisorNamespaceYaml = '../../app/cadvisor/00-cadvisor-namespace.yaml';
+const cadvisorNamespaceYaml = '../../kubernetes-sample-apps/cadvisor/00-cadvisor-namespace.yaml';
 const cadvisorNamespaceManifestRaw = open(cadvisorNamespaceYaml);
 
-const cadvisorServiceAccountYaml = '../../app/cadvisor/01-cadvisor-serviceaccount.yaml';
+const cadvisorServiceAccountYaml = '../../kubernetes-sample-apps/cadvisor/01-cadvisor-serviceaccount.yaml';
 const cadvisorServiceAccountManifestRaw = open(cadvisorServiceAccountYaml);
 
-const cadvisorDaemonSetYaml = '../../app/cadvisor/02-cadvisor-daemonset.yaml';
+const cadvisorDaemonSetYaml = '../../kubernetes-sample-apps/cadvisor/02-cadvisor-daemonset.yaml';
 const cadvisorDaemonSetManifestRaw = open(cadvisorDaemonSetYaml);
 
 
-const cadvisorServiceYaml = __ENV.CHAOS_MANIFEST || '../../app/cadvisor/03-cadvisor-service.yaml';
+const cadvisorServiceYaml = __ENV.CHAOS_MANIFEST || '../../kubernetes-sample-apps/cadvisor/03-cadvisor-service.yaml';
 const cadvisorServiceManifestRaw = open(cadvisorServiceYaml);
 
 
