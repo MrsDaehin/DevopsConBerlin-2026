@@ -233,7 +233,7 @@ What happens when multiple failures occur together?
 ### Deploy Demo Application
 
 ```bash
-kubectl apply -k kubernetes-sample-apps/bookinfo/kustomize
+kubectl apply -k kubernetes-sample-apps/bookinfo-example/kustomize
 ```
 
 ### Run Baseline Test
@@ -269,15 +269,6 @@ By the end of this session you will know how to:
 - Treat chaos experiments as code
 - Integrate resilience testing into your delivery pipelines
 
----
-
-## About the Speaker
-
-**Almudena "Almu" Vivanco**
-
-Principal Performance Engineer, Chaos Engineering advocate, and international speaker focused on performance, observability, resilience, and cloud-native platforms.
-
-With more than 20 years of experience building and testing large-scale distributed systems, Almu helps organizations move beyond traditional testing and adopt resilience engineering practices that prepare systems for real-world failures.
 
 ---
 
