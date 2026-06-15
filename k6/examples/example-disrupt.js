@@ -2,25 +2,26 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Kubernetes } from 'k6/x/kubernetes';
 
-const namespace = __ENV.NAMESPACE || 'default';
-const targetUrl = __ENV.TARGET_URL || 'http://demo-app.default.svc.cluster.local';
 
-const kubernetes = new Kubernetes();
+import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js';
+
+const namespace = __ENV.NAMESPACE || 'default';
+const targetUrl = __ENV.TARGET_URL || 'http://localhost:64703/';
 
 export const options = {
   scenarios: {
     load: {
       executor: 'constant-vus',
       exec: 'load',
-      vus: 10,
-      duration: '5m',
+      vus: 1,
+      duration: '2m',
     },
     disrupt: {
       executor: 'shared-iterations',
       exec: 'disrupt',
       vus: 1,
       iterations: 1,
-      startTime: '1m',
+      startTime: '10s',
     },
   },
   thresholds: {
@@ -43,6 +44,8 @@ export function load() {
 export function disrupt() {
   console.log('Injecting Chaos Mesh NetworkChaos experiment');
 
+  const kubernetes = new Kubernetes();
+
   const experiment = `
 apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
@@ -56,7 +59,7 @@ spec:
     namespaces:
       - ${namespace}
     labelSelectors:
-      app: demo-app
+      app: helloservice
   delay:
     latency: "300ms"
     correlation: "100"
@@ -74,6 +77,8 @@ spec:
 export function teardown() {
   console.log('Cleaning Chaos Mesh experiment');
 
+  const kubernetes = new Kubernetes();
+
   try {
     kubernetes.delete(
       'NetworkChaos.chaos-mesh.org',
@@ -83,4 +88,10 @@ export function teardown() {
   } catch (e) {
     console.log(`Cleanup skipped or failed: ${e}`);
   }
+}
+
+export function handleSummary(data) {
+  return {
+    'basic-load-report.html': htmlReport(data),
+  };
 }

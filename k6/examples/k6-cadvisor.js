@@ -38,9 +38,18 @@ export function teardown () {
     
     console.log('Cleaning up cadvisor resources...');
     
-    kubernetes.delete(
-        `apiVersion: 'v1',
-        kind: 'Namespace',
-        metadata: 
-            name: 'cadvisor'`);
+    // delete resources explicitly using kind/name
+    try {
+        kubernetes.delete('service', 'cadvisor', 'cadvisor');
+    } catch (e) {}
+    try {
+        kubernetes.delete('daemonset', 'cadvisor', 'cadvisor');
+    } catch (e) {}
+    try {
+        kubernetes.delete('serviceaccount', 'cadvisor', 'cadvisor');
+    } catch (e) {}
+    // finally delete the namespace
+    try {
+        kubernetes.delete('namespace', 'cadvisor');
+    } catch (e) { console.log(`Namespace cleanup skipped: ${e}`); }
 }

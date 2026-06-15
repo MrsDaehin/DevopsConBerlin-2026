@@ -1,0 +1,13 @@
+kind: PodChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: demospace
+  name: potatokill
+spec:
+  selector:
+    namespaces:
+      - demospace
+    labelSelectors:
+      app: helloservice
+  mode: all
+  action: pod-kill
